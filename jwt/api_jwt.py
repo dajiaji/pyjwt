@@ -92,7 +92,6 @@ class PyJWT:
             key=key,
             algorithms=algorithms,
             options=options,
-            **kwargs,
         )
 
         try:
