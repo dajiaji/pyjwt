@@ -676,6 +676,15 @@ class TestEd25519Algorithms:
         with open(key_path("testkey_ed25519.pub")) as keyfile:
             algo.prepare_key(keyfile.read())
 
+        with open(key_path("testkey_ed25519_ssh.pub")) as keyfile:
+            algo.prepare_key(keyfile.read())
+
+    def test_ed25519_should_reject_invalid_string_key(self):
+        algo = Ed25519Algorithm()
+
+        with pytest.raises(TypeError):
+            algo.prepare_key("invalid key string")
+
     def test_ed25519_should_accept_unicode_key(self):
         algo = Ed25519Algorithm()
 
@@ -742,6 +751,9 @@ class TestEd25519Algorithms:
 
         signature = algo.sign(b"Hello World!", key)
         assert algo.verify(b"Hello World!", key.public_key(), signature)
+
+        # private key can also be used to verify signature.
+        assert algo.verify(b"Hello World!", key, signature)
 
     def test_ed25519_jwk_public_key_should_parse_and_verify(self):
         algo = Ed25519Algorithm()
