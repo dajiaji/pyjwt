@@ -166,6 +166,7 @@ class TestAlgorithms:
             "P-256": ECAlgorithm.SHA256,
             "P-384": ECAlgorithm.SHA384,
             "P-521": ECAlgorithm.SHA512,
+            "secp256k1": ECAlgorithm.SHA256,
         }
         for (curve, hash) in tests.items():
             algo = ECAlgorithm(hash)
@@ -185,8 +186,8 @@ class TestAlgorithms:
 
         valid_points = {
             "P-256": {
-                "x": "PTTjIY84aLtaZCxLTrG_d8I0G6YKCV7lg8M4xkKfwQ4=",
-                "y": "ank6KA34vv24HZLXlChVs85NEGlpg2sbqNmR_BcgyJU=",
+                "x": "PTTjIY84aLtaZCxLTrG_d8I0G6YKCV7lg8M4xkKfwQ4",
+                "y": "ank6KA34vv24HZLXlChVs85NEGlpg2sbqNmR_BcgyJU",
             },
             "P-384": {
                 "x": "IDC-5s6FERlbC4Nc_4JhKW8sd51AhixtMdNUtPxhRFP323QY6cwWeIA3leyZhz-J",
@@ -195,6 +196,10 @@ class TestAlgorithms:
             "P-521": {
                 "x": "AHKZLLOsCOzz5cY97ewNUajB957y-C-U88c3v13nmGZx6sYl_oJXu9A5RkTKqjqvjyekWF-7ytDyRXYgCF5cj0Kt",
                 "y": "AdymlHvOiLxXkEhayXQnNCvDX4h9htZaCJN34kfmC6pV5OhQHiraVySsUdaQkAgDPrwQrJmbnX9cwlGfP-HqHZR1",
+            },
+            "secp256k1": {
+                "x": "MLnVyPDPQpNm0KaaO4iEh0i8JItHXJE0NcIe8GK1SYs",
+                "y": "7r8d-xF7QAgT5kSRdly6M8xeg4Jz83Gs_CQPQRH65QI",
             },
         }
 
@@ -223,7 +228,7 @@ class TestAlgorithms:
             algo.from_jwk('{"kty": "EC", "x": "dGVzdHRlc3Q=", "y": "dGVzdA=="}')
 
         # EC coordinates length invalid
-        for curve in ("P-256", "P-384", "P-521"):
+        for curve in ("P-256", "P-384", "P-521", "secp256k1"):
             with pytest.raises(InvalidKeyError):
                 algo.from_jwk(
                     '{{"kty": "EC", "crv": "{}", "x": "dGVzdA==", '
@@ -728,3 +733,70 @@ class TestEd25519Algorithms:
             jwt_pub_key_second = algo.prepare_key(jwt_pub_key_first)
 
         assert jwt_pub_key_first == jwt_pub_key_second
+
+    def test_ed25519_jwk_private_key_should_parse_and_verify(self):
+        algo = Ed25519Algorithm()
+
+        with open(key_path("jwk_okp_key_Ed25519.json")) as keyfile:
+            key = algo.from_jwk(keyfile.read())
+
+        signature = algo.sign(b"Hello World!", key)
+        assert algo.verify(b"Hello World!", key.public_key(), signature)
+
+    def test_ed25519_jwk_public_key_should_parse_and_verify(self):
+        algo = Ed25519Algorithm()
+
+        with open(key_path("jwk_okp_key_Ed25519.json")) as keyfile:
+            priv_key = algo.from_jwk(keyfile.read())
+
+        with open(key_path("jwk_okp_pub_Ed25519.json")) as keyfile:
+            pub_key = algo.from_jwk(keyfile.read())
+
+        signature = algo.sign(b"Hello World!", priv_key)
+        assert algo.verify(b"Hello World!", pub_key, signature)
+
+    def test_ed25519_jwk_fails_on_invalid_json(self):
+        algo = Ed25519Algorithm()
+
+        with open(key_path("jwk_okp_pub_Ed25519.json")) as keyfile:
+            valid_pub = json.loads(keyfile.read())
+        with open(key_path("jwk_okp_key_Ed25519.json")) as keyfile:
+            valid_key = json.loads(keyfile.read())
+
+        # Invalid instance type
+        with pytest.raises(InvalidKeyError):
+            algo.from_jwk(123)
+
+        # Invalid JSON
+        with pytest.raises(InvalidKeyError):
+            algo.from_jwk("<this isn't json>")
+
+        # Invalid kty, not "OKP"
+        v = valid_pub.copy()
+        v["kty"] = "oct"
+        with pytest.raises(InvalidKeyError):
+            algo.from_jwk(v)
+
+        # Invalid crv, not "Ed25519"
+        v = valid_pub.copy()
+        v["crv"] = "P-256"
+        with pytest.raises(InvalidKeyError):
+            algo.from_jwk(v)
+
+        # Missing x
+        v = valid_pub.copy()
+        del v["x"]
+        with pytest.raises(InvalidKeyError):
+            algo.from_jwk(v)
+
+        # Invalid x
+        v = valid_pub.copy()
+        v["x"] = "123"
+        with pytest.raises(InvalidKeyError):
+            algo.from_jwk(v)
+
+        # Invalid d
+        v = valid_key.copy()
+        v["d"] = "123"
+        with pytest.raises(InvalidKeyError):
+            algo.from_jwk(v)
