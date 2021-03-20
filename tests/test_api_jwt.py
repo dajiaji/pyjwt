@@ -105,6 +105,20 @@ class TestJWT:
         exception = context.value
         assert str(exception) == "Invalid payload string: must be a json object"
 
+    def test_decode_with_unknown_parameter_throws_exception(self, jwt):
+        example_payload = {"hello": "world"}
+        example_secret = "secret"
+        example_jwt = (
+            b"eyJhbGciOiAiSFMyNTYiLCAidHlwIjogIkpXVCJ9"
+            b".eyJoZWxsbyI6ICJ3b3JsZCJ9"
+            b".tvagLDLoaiJKxOKqpBXSEGy7SYSifZhjntgm9ctpyj8"
+        )
+
+        with pytest.raises(TypeError):
+            decoded_payload = jwt.decode(
+                example_jwt, key=example_secret, foo="bar", algorithms=["HS256"]
+            )
+
     def test_decode_with_invalid_audience_param_throws_exception(self, jwt):
         secret = "secret"
         example_jwt = (
