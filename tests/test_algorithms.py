@@ -658,6 +658,13 @@ class TestAlgorithmsRFC7520:
         result = algo.verify(signing_input, key, signature)
         assert result
 
+        # private key can also be used.
+        with open(key_path("jwk_ec_key_P-521.json")) as keyfile:
+            private_key = algo.from_jwk(keyfile.read())
+
+        result = algo.verify(signing_input, private_key, signature)
+        assert result
+
 
 @crypto_required
 class TestEd25519Algorithms:
@@ -800,3 +807,28 @@ class TestEd25519Algorithms:
         v["d"] = "123"
         with pytest.raises(InvalidKeyError):
             algo.from_jwk(v)
+
+    def test_ed25519_to_jwk_works_with_from_jwk(self):
+        algo = Ed25519Algorithm()
+
+        with open(key_path("jwk_okp_key_Ed25519.json")) as keyfile:
+            priv_key_1 = algo.from_jwk(keyfile.read())
+
+        with open(key_path("jwk_okp_pub_Ed25519.json")) as keyfile:
+            pub_key_1 = algo.from_jwk(keyfile.read())
+
+        pub = algo.to_jwk(pub_key_1)
+        pub_key_2 = algo.from_jwk(pub)
+        pri = algo.to_jwk(priv_key_1)
+        priv_key_2 = algo.from_jwk(pri)
+
+        signature_1 = algo.sign(b"Hello World!", priv_key_1)
+        signature_2 = algo.sign(b"Hello World!", priv_key_2)
+        assert algo.verify(b"Hello World!", pub_key_2, signature_1)
+        assert algo.verify(b"Hello World!", pub_key_2, signature_2)
+
+    def test_ed25519_to_jwk_raises_exception_on_invalid_key(self):
+        algo = Ed25519Algorithm()
+
+        with pytest.raises(InvalidKeyError):
+            algo.to_jwk({"not": "a valid key"})

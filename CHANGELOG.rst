@@ -4,8 +4,20 @@ Changelog
 All notable changes to this project will be documented in this file.
 This project adheres to `Semantic Versioning <https://semver.org/>`__.
 
-`Unreleased <https://github.com/jpadilla/pyjwt/compare/2.0.0...HEAD>`__
+`Unreleased <https://github.com/jpadilla/pyjwt/compare/2.1.0...HEAD>`__
 -----------------------------------------------------------------------
+
+Changed
+~~~~~~~
+
+Fixed
+~~~~~
+
+Added
+~~~~~
+
+`v2.1.0 <https://github.com/jpadilla/pyjwt/compare/2.0.1...2.1.0>`__
+--------------------------------------------------------------------
 
 Changed
 ~~~~~~~
@@ -18,6 +30,7 @@ Fixed
 - Remove padding from JWK test data. `#628 <https://github.com/jpadilla/pyjwt/pull/628>`__
 - Make `kty` mandatory in JWK to be compliant with RFC7517. `#624 <https://github.com/jpadilla/pyjwt/pull/624>`__
 - Allow JWK without `alg` to be compliant with RFC7517. `#624 <https://github.com/jpadilla/pyjwt/pull/624>`__
+- Allow to verify with private key on ECAlgorithm, as well as on Ed25519Algorithm. `#645 <https://github.com/jpadilla/pyjwt/pull/645>`__
 
 Added
 ~~~~~
@@ -26,6 +39,8 @@ Added
 - Add missing exceptions.InvalidKeyError to jwt module __init__ imports `#620 <https://github.com/jpadilla/pyjwt/pull/620>`__
 - Add support for ES256K algorithm `#629 <https://github.com/jpadilla/pyjwt/pull/629>`__
 - Add `from_jwk()` to Ed25519Algorithm `#621 <https://github.com/jpadilla/pyjwt/pull/621>`__
+- Add `to_jwk()` to Ed25519Algorithm `#643 <https://github.com/jpadilla/pyjwt/pull/643>`__
+- Export `PyJWK` and `PyJWKSet` `#652 <https://github.com/jpadilla/pyjwt/pull/652>`__
 
 `v2.0.1 <https://github.com/jpadilla/pyjwt/compare/2.0.0...2.0.1>`__
 --------------------------------------------------------------------
